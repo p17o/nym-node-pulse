@@ -1,0 +1,57 @@
+name: Update Status Page
+
+on:
+  schedule:
+    - cron: '*/30 * * * *'
+  workflow_dispatch:
+
+jobs:
+  update-status:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Fetch Performance Data
+        run: |
+          curl -s "YOUR_JSON_SOURCE_URL" -o status.json
+
+      - name: Parse Performance Data
+        run: |
+          PERFORMANCE=$(jq -r '.performance' status.json)
+          echo "PERFORMANCE=$PERFORMANCE" >> $GITHUB_ENV
+
+      - name: Update Status Page
+        run: |
+          echo "Updating status page..."
+          if [ "$PERFORMANCE" -ge 90 ]; then
+            STATUS="Operational"
+            COLOR="green"
+          elif [ "$PERFORMANCE" -ge 60 ]; then
+            STATUS="Degraded Performance"
+            COLOR="yellow"
+          else
+            STATUS="Major Outage"
+            COLOR="red"
+          fi
+          echo "Status: $STATUS, Color: $COLOR"
+          echo "{\"status\": \"$STATUS\", \"color\": \"$COLOR\", \"performance\": $PERFORMANCE }" > data.json
+
+      - name: Fetch Open Issues for Maintenance and Incidents
+        run: |
+          curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO/issues?state=open" > issues.json
+          jq '[.[] | {title: .title, labels: [.labels[].name], url: .html_url, created_at: .created_at}]' issues.json > issues_filtered.json
+
+      - name: Commit and Push Changes
+        run: |
+          git config --global user.email "github-actions@github.com"
+          git config --global user.name "GitHub Actions"
+          git add data.json issues_filtered.json
+          git commit -m "Update status and issues" || echo "No changes to commit"
+          git push
+
+      - name: Publish Status Page
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: ./
