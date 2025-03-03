@@ -48,7 +48,8 @@ jobs:
           git config --global user.name "GitHub Actions"
           git add data.json issues_filtered.json
           git commit -m "Update status and issues" || echo "No changes to commit"
-          git push
+          git push https://x-access-token:${{ secrets.GH_PAT }}@github.com/p17o/nym-node-pulse.git HEAD:gh-pages
+
 
       - name: Publish Status Page
         uses: JamesIves/github-pages-deploy-action@v4
