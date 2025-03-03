@@ -14,7 +14,7 @@ jobs:
 
       - name: Fetch Performance Data
         run: |
-          curl -s "YOUR_JSON_SOURCE_URL" -o status.json
+          curl -s "https://mainnet-node-status-api.nymtech.cc/v2/gateways/4LNjXGPYqSPd5MvtmaezugFzezsEF23CQttW7J1mfnQs" -o status.json
 
       - name: Parse Performance Data
         run: |
@@ -39,7 +39,7 @@ jobs:
 
       - name: Fetch Open Issues for Maintenance and Incidents
         run: |
-          curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/YOUR_GITHUB_USERNAME/YOUR_REPO/issues?state=open" > issues.json
+          curl -s -H "Accept: application/vnd.github.v3+json" "https://api.github.com/repos/p17o/nym-node-pulse/issues?state=open" > issues.json
           jq '[.[] | {title: .title, labels: [.labels[].name], url: .html_url, created_at: .created_at}]' issues.json > issues_filtered.json
 
       - name: Commit and Push Changes
