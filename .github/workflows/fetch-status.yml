@@ -29,12 +29,21 @@ jobs:
         echo "$ENDPOINTS" | jq -c '.[]' | while read endpoint; do
           NAME=$(echo $endpoint | jq -r '.name' | tr ' ' '_')
           URL=$(echo $endpoint | jq -r '.url')
+          TYPE=$(echo $endpoint | jq -r '.type')
+          KEY=$(echo $endpoint | jq -r '.key // empty')
           START=$(date +%s%3N)
-          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL || echo "000")
+          RESPONSE=$(curl -s -w "\n%{http_code}" $URL)
+          STATUS=$(echo "$RESPONSE" | tail -n1)
           END=$(date +%s%3N)
           RESPONSE_TIME=$((END - START))
+          
+          if [ "$TYPE" = "json" ]; then
+            VALUE=$(echo "$RESPONSE" | head -n -1 | jq -r ".$KEY" 2>/dev/null || echo "N/A")
+          else
+            VALUE="N/A"
+          fi
 
-          echo "{\"timestamp\": \"$TIMESTAMP\", \"status\": \"$STATUS\", \"response_time\": \"$RESPONSE_TIME\"}" > "data/${NAME}.json"
+          echo "{\"timestamp\": \"$TIMESTAMP\", \"status\": \"$STATUS\", \"response_time\": \"$RESPONSE_TIME\", \"key_value\": \"$VALUE\"}" > "data/${NAME}.json"
         done
 
     - name: Commit Changes
