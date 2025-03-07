@@ -58,15 +58,20 @@ jobs:
                     <p class="text-sm mt-2">Last Updated: '"$TIMESTAMP"'</p>
                 </div>
                 <div id="status-details" class="grid grid-cols-1 md:grid-cols-2 gap-4">' > docs/index.html
-        
+
         STATUS_COUNT=0
         HEALTHY_COUNT=0
 
         for FILE in data/*.json; do
-          SERVICE=$(basename $FILE .json | tr '_' ' ')
-          STATUS=$(jq -r '.status' $FILE)
-          RESPONSE_TIME=$(jq -r '.response_time' $FILE)
-          KEY_VALUE=$(jq -r '.key_value' $FILE)
+          if [ ! -s "$FILE" ]; then
+            echo "Skipping empty or invalid file: $FILE"
+            continue
+          fi
+
+          SERVICE=$(basename "$FILE" .json | tr '_' ' ')
+          STATUS=$(jq -r '.status // empty' "$FILE" 2>/dev/null || echo "unknown")
+          RESPONSE_TIME=$(jq -r '.response_time // empty' "$FILE" 2>/dev/null || echo "N/A")
+          KEY_VALUE=$(jq -r '.key_value // empty' "$FILE" 2>/dev/null || echo "N/A")
           STATUS_CLASS=$([ "$STATUS" = "200" ] && echo "bg-green-500" || echo "bg-red-500")
 
           if [ "$STATUS" = "200" ]; then
@@ -86,26 +91,28 @@ jobs:
                   <p class='text-sm'>Key Value: $KEY_VALUE</p>
                 </div>" >> docs/index.html
         done
-        
-        if [ "$HEALTHY_COUNT" -eq "$STATUS_COUNT" ]; then
+
+        if [ "$STATUS_COUNT" -gt 0 ] && [ "$HEALTHY_COUNT" -eq "$STATUS_COUNT" ]; then
           OVERALL_STATUS="✅ All systems operational"
-        else
+        elif [ "$STATUS_COUNT" -gt 0 ]; then
           OVERALL_STATUS="⚠️ Some issues detected"
+        else
+          OVERALL_STATUS="❌ No data available"
         fi
-        
+
         sed -i "s|Calculating...|$OVERALL_STATUS|" docs/index.html
-        
+
         echo '</div>
         <div id="status-history" class="p-4 bg-gray-800 rounded-lg shadow mt-4">
             <h2 class="text-xl font-semibold">Status History</h2>
             <ul class="mt-2 space-y-2">' >> docs/index.html
-        
-        tail -n 10 data/*.json | while read line; do
-          TIMESTAMP=$(echo "$line" | jq -r '.timestamp')
+
+        tail -n 10 data/*.json | while read -r line; do
+          TIMESTAMP=$(echo "$line" | jq -r '.timestamp // empty' 2>/dev/null || echo "N/A")
           SERVICE=$(basename "$line" .json | tr '_' ' ')
-          STATUS=$(echo "$line" | jq -r '.status')
-          RESPONSE_TIME=$(echo "$line" | jq -r '.response_time')
-          KEY_VALUE=$(echo "$line" | jq -r '.key_value')
+          STATUS=$(echo "$line" | jq -r '.status // empty' 2>/dev/null || echo "unknown")
+          RESPONSE_TIME=$(echo "$line" | jq -r '.response_time // empty' 2>/dev/null || echo "N/A")
+          KEY_VALUE=$(echo "$line" | jq -r '.key_value // empty' 2>/dev/null || echo "N/A")
 
           echo "<li class='p-2 bg-gray-700 rounded'>
                   <strong>$TIMESTAMP</strong>
@@ -114,7 +121,7 @@ jobs:
                   </ul>
                 </li>" >> docs/index.html
         done
-        
+
         echo '</ul></div></div></body></html>' >> docs/index.html
 
     - name: Commit Updated Page
