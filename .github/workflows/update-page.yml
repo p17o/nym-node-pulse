@@ -4,7 +4,7 @@ on:
   push:
     branches:
       - main
-  workflow_dispatch:
+  workflow_dispatch: # Allows manual trigger
 
 jobs:
   update-page:
@@ -13,6 +13,8 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
+      with:
+        persist-credentials: false  # Disables default GitHub Actions token
 
     - name: Generate Status Page
       run: |
