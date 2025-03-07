@@ -12,8 +12,6 @@ jobs:
     steps:
     - name: Checkout Repository
       uses: actions/checkout@v4
-      with:
-        - token: ${{ secrets.GH_PAT }}
 
     - name: Fetch Status
       run: |
@@ -38,6 +36,8 @@ jobs:
         done
 
     - name: Commit Changes
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
       run: |
         git config user.name "github-actions[bot]"
         git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
