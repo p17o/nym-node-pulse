@@ -1,0 +1,60 @@
+name: Update Status Page
+
+on:
+  push:
+    branches:
+      - main
+  workflow_dispatch:
+
+jobs:
+  update-page:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Generate Status Page
+      run: |
+        mkdir -p docs
+        TIMESTAMP=$(date -u +"%Y-%m-%d %H:%M:%S")
+        
+        echo '<!DOCTYPE html>
+        <html lang="en">
+        <head>
+            <meta charset="UTF-8">
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <title>Status Page</title>
+            <style>
+                body { font-family: Arial, sans-serif; background: black; color: white; text-align: center; }
+                .status { margin: 10px; padding: 10px; border-radius: 5px; }
+                .healthy { background: green; }
+                .down { background: red; }
+            </style>
+        </head>
+        <body>
+            <h1>Service Status</h1>
+            <p>Last Updated: '"$TIMESTAMP"'</p>' > docs/index.html
+        
+        for FILE in data/*.json; do
+          SERVICE=$(basename $FILE .json | tr '_' ' ')
+          STATUS=$(jq -r '.status' $FILE)
+          RESPONSE_TIME=$(jq -r '.response_time' $FILE)
+          STATUS_CLASS=$([ "$STATUS" = "200" ] && echo "healthy" || echo "down")
+
+          echo "<div class='status $STATUS_CLASS'>
+                  <h2>$SERVICE</h2>
+                  <p>Status: $STATUS</p>
+                  <p>Response Time: $RESPONSE_TIME ms</p>
+                </div>" >> docs/index.html
+        done
+
+        echo '</body></html>' >> docs/index.html
+
+    - name: Commit Updated Page
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git add docs/index.html
+        git commit -m "Update status page at $(date -u +"%Y-%m-%d %H:%M:%S")" || exit 0
+        git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git main

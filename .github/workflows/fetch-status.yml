@@ -1,0 +1,46 @@
+name: Fetch Service Status
+
+on:
+  schedule:
+    - cron: "*/5 * * * *"  # Runs every 5 minutes
+  workflow_dispatch: # Allows manual trigger
+
+jobs:
+  fetch-status:
+    runs-on: ubuntu-latest
+
+    steps:
+    - name: Checkout Repository
+      uses: actions/checkout@v4
+
+    - name: Fetch Status
+      run: |
+        mkdir -p data
+        TIMESTAMP=$(date -u +"%Y-%m-%dT%H:%M:%SZ")
+        ENDPOINTS='[
+            { "name": "PT node landing page", "url": "https://nym-exit.pt-node1.p17o.com/", "type": "http" },
+            { "name": "PT node performance", "url": "https://mainnet-node-status-api.nymtech.cc/v2/gateways/4LNjXGPYqSPd5MvtmaezugFzezsEF23CQttW7J1mfnQs", "type": "json", "key": "performance" },
+            { "name": "CH node landing page", "url": "https://nym-exit.ch-node1.p17o.com/", "type": "http" },
+            { "name": "CH node performance", "url": "https://mainnet-node-status-api.nymtech.cc/v2/gateways/HyFjqGTV44RkFv8wKe7R2DmjQxYB5ZvGRwuho9KKe9DB", "type": "json", "key": "performance" }
+        ]'
+
+        echo "$ENDPOINTS" | jq -c '.[]' | while read endpoint; do
+          NAME=$(echo $endpoint | jq -r '.name' | tr ' ' '_')
+          URL=$(echo $endpoint | jq -r '.url')
+          START=$(date +%s%3N)
+          STATUS=$(curl -s -o /dev/null -w "%{http_code}" $URL || echo "000")
+          END=$(date +%s%3N)
+          RESPONSE_TIME=$((END - START))
+
+          echo "{\"timestamp\": \"$TIMESTAMP\", \"status\": \"$STATUS\", \"response_time\": \"$RESPONSE_TIME\"}" > "data/${NAME}.json"
+        done
+
+    - name: Commit Changes
+      env:
+        GH_PAT: ${{ secrets.GH_PAT }}
+      run: |
+        git config --global user.name "github-actions"
+        git config --global user.email "github-actions@github.com"
+        git add data/*.json
+        git commit -m "Update status at $(date -u +"%Y-%m-%d %H:%M:%S")" || exit 0
+        git push https://x-access-token:${GH_PAT}@github.com/${{ github.repository }}.git main
