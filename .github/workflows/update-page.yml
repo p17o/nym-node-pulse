@@ -26,31 +26,96 @@ jobs:
             <meta charset="UTF-8">
             <meta name="viewport" content="width=device-width, initial-scale=1.0">
             <title>Status Page</title>
+            <script src="https://cdn.tailwindcss.com"></script>
             <style>
-                body { font-family: Arial, sans-serif; background: black; color: white; text-align: center; }
-                .status { margin: 10px; padding: 10px; border-radius: 5px; }
-                .healthy { background: green; }
-                .down { background: red; }
+                body { font-family: Arial, sans-serif; background: black; color: white; }
+                .tooltip { position: relative; display: inline-block; }
+                .tooltip .tooltiptext {
+                    visibility: hidden;
+                    width: 140px;
+                    background-color: gray;
+                    color: white;
+                    text-align: center;
+                    border-radius: 5px;
+                    padding: 5px;
+                    position: absolute;
+                    z-index: 1;
+                    bottom: 125%;
+                    left: 50%;
+                    margin-left: -70px;
+                    opacity: 0;
+                    transition: opacity 0.3s;
+                }
+                .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
             </style>
         </head>
-        <body>
-            <h1>Service Status</h1>
-            <p>Last Updated: '"$TIMESTAMP"'</p>' > docs/index.html
+        <body class="bg-black text-white">
+            <div class="container mx-auto p-4">
+                <h1 class="text-3xl font-bold mb-4">Service Status</h1>
+                <div id="status-summary" class="p-4 bg-gray-800 rounded-lg shadow mb-4">
+                    <h2 class="text-xl font-semibold">Overall Health</h2>
+                    <p id="overall-status" class="text-lg font-bold mt-2">Calculating...</p>
+                    <p class="text-sm mt-2">Last Updated: '"$TIMESTAMP"'</p>
+                </div>
+                <div id="status-details" class="grid grid-cols-1 md:grid-cols-2 gap-4">' > docs/index.html
         
+        STATUS_COUNT=0
+        HEALTHY_COUNT=0
+
         for FILE in data/*.json; do
           SERVICE=$(basename $FILE .json | tr '_' ' ')
           STATUS=$(jq -r '.status' $FILE)
           RESPONSE_TIME=$(jq -r '.response_time' $FILE)
-          STATUS_CLASS=$([ "$STATUS" = "200" ] && echo "healthy" || echo "down")
+          KEY_VALUE=$(jq -r '.key_value' $FILE)
+          STATUS_CLASS=$([ "$STATUS" = "200" ] && echo "bg-green-500" || echo "bg-red-500")
 
-          echo "<div class='status $STATUS_CLASS'>
-                  <h2>$SERVICE</h2>
-                  <p>Status: $STATUS</p>
-                  <p>Response Time: $RESPONSE_TIME ms</p>
+          if [ "$STATUS" = "200" ]; then
+            HEALTHY_COUNT=$((HEALTHY_COUNT+1))
+          fi
+          STATUS_COUNT=$((STATUS_COUNT+1))
+
+          echo "<div class='p-4 bg-gray-800 rounded-lg shadow'>
+                  <h3 class='text-lg font-semibold'>$SERVICE</h3>
+                  <p>Status: <span class='font-bold'>$STATUS</span></p>
+                  <div class='mt-2 flex gap-1'>
+                      <div class='tooltip w-4 h-4 $STATUS_CLASS rounded'>
+                          <span class='tooltiptext'>Status: $STATUS<br>Response Time: $RESPONSE_TIME ms<br>Key Value: $KEY_VALUE</span>
+                      </div>
+                  </div>
+                  <p class='text-sm mt-2'>Response Time: $RESPONSE_TIME ms</p>
+                  <p class='text-sm'>Key Value: $KEY_VALUE</p>
                 </div>" >> docs/index.html
         done
+        
+        if [ "$HEALTHY_COUNT" -eq "$STATUS_COUNT" ]; then
+          OVERALL_STATUS="✅ All systems operational"
+        else
+          OVERALL_STATUS="⚠️ Some issues detected"
+        fi
+        
+        sed -i "s|Calculating...|$OVERALL_STATUS|" docs/index.html
+        
+        echo '</div>
+        <div id="status-history" class="p-4 bg-gray-800 rounded-lg shadow mt-4">
+            <h2 class="text-xl font-semibold">Status History</h2>
+            <ul class="mt-2 space-y-2">' >> docs/index.html
+        
+        tail -n 10 data/*.json | while read line; do
+          TIMESTAMP=$(echo "$line" | jq -r '.timestamp')
+          SERVICE=$(basename "$line" .json | tr '_' ' ')
+          STATUS=$(echo "$line" | jq -r '.status')
+          RESPONSE_TIME=$(echo "$line" | jq -r '.response_time')
+          KEY_VALUE=$(echo "$line" | jq -r '.key_value')
 
-        echo '</body></html>' >> docs/index.html
+          echo "<li class='p-2 bg-gray-700 rounded'>
+                  <strong>$TIMESTAMP</strong>
+                  <ul class='mt-1'>
+                      <li>$SERVICE: $STATUS (Response Time: $RESPONSE_TIME ms, Key Value: $KEY_VALUE)</li>
+                  </ul>
+                </li>" >> docs/index.html
+        done
+        
+        echo '</ul></div></div></body></html>' >> docs/index.html
 
     - name: Commit Updated Page
       env:
