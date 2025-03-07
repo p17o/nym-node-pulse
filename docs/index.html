@@ -4,34 +4,150 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Status Page</title>
+    <script src="https://cdn.tailwindcss.com"></script>
     <style>
-        body { font-family: Arial, sans-serif; background: black; color: white; text-align: center; }
-        .status { margin: 10px; padding: 10px; border-radius: 5px; }
-        .healthy { background: green; }
-        .down { background: red; }
+        body { font-family: Arial, sans-serif; background: black; color: white; }
+        .tooltip { position: relative; display: inline-block; }
+        .tooltip .tooltiptext {
+            visibility: hidden;
+            width: 140px;
+            background-color: gray;
+            color: white;
+            text-align: center;
+            border-radius: 5px;
+            padding: 5px;
+            position: absolute;
+            z-index: 1;
+            bottom: 125%;
+            left: 50%;
+            margin-left: -70px;
+            opacity: 0;
+            transition: opacity 0.3s;
+        }
+        .tooltip:hover .tooltiptext { visibility: visible; opacity: 1; }
     </style>
 </head>
-<body>
-    <h1>Service Status</h1>
-    <p>Last Updated: 2025-03-07 18:57:38</p>
-<div class='status healthy'>
-          <h2>CH node landing page</h2>
-          <p>Status: 200</p>
-          <p>Response Time: 518 ms</p>
+<body class="bg-black text-white">
+    <div class="container mx-auto p-4">
+        <h1 class="text-3xl font-bold mb-4">Service Status</h1>
+        <div id="status-summary" class="p-4 bg-gray-800 rounded-lg shadow mb-4">
+            <h2 class="text-xl font-semibold">Overall Health</h2>
+            <p id="overall-status" class="text-lg font-bold mt-2">✅ All systems operational</p>
+            <p class="text-sm mt-2">Last Updated: 2025-03-07 19:21:34</p>
         </div>
-<div class='status healthy'>
-          <h2>CH node performance</h2>
-          <p>Status: 200</p>
-          <p>Response Time: 561 ms</p>
+        <div id="status-details" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+<div class='p-4 bg-gray-800 rounded-lg shadow'>
+          <h3 class='text-lg font-semibold'>CH node landing page</h3>
+          <p>Status: <span class='font-bold'>200</span></p>
+          <div class='mt-2 flex gap-1'>
+              <div class='tooltip w-4 h-4 bg-green-500 rounded'>
+                  <span class='tooltiptext'>Status: 200<br>Response Time: 589 ms<br>Key Value: N/A</span>
+              </div>
+          </div>
+          <p class='text-sm mt-2'>Response Time: 589 ms</p>
+          <p class='text-sm'>Key Value: N/A</p>
         </div>
-<div class='status healthy'>
-          <h2>PT node landing page</h2>
-          <p>Status: 200</p>
-          <p>Response Time: 528 ms</p>
+<div class='p-4 bg-gray-800 rounded-lg shadow'>
+          <h3 class='text-lg font-semibold'>CH node performance</h3>
+          <p>Status: <span class='font-bold'>200</span></p>
+          <div class='mt-2 flex gap-1'>
+              <div class='tooltip w-4 h-4 bg-green-500 rounded'>
+                  <span class='tooltiptext'>Status: 200<br>Response Time: 504 ms<br>Key Value: 89</span>
+              </div>
+          </div>
+          <p class='text-sm mt-2'>Response Time: 504 ms</p>
+          <p class='text-sm'>Key Value: 89</p>
         </div>
-<div class='status healthy'>
-          <h2>PT node performance</h2>
-          <p>Status: 200</p>
-          <p>Response Time: 624 ms</p>
+<div class='p-4 bg-gray-800 rounded-lg shadow'>
+          <h3 class='text-lg font-semibold'>PT node landing page</h3>
+          <p>Status: <span class='font-bold'>200</span></p>
+          <div class='mt-2 flex gap-1'>
+              <div class='tooltip w-4 h-4 bg-green-500 rounded'>
+                  <span class='tooltiptext'>Status: 200<br>Response Time: 627 ms<br>Key Value: N/A</span>
+              </div>
+          </div>
+          <p class='text-sm mt-2'>Response Time: 627 ms</p>
+          <p class='text-sm'>Key Value: N/A</p>
         </div>
-</body></html>
+<div class='p-4 bg-gray-800 rounded-lg shadow'>
+          <h3 class='text-lg font-semibold'>PT node performance</h3>
+          <p>Status: <span class='font-bold'>200</span></p>
+          <div class='mt-2 flex gap-1'>
+              <div class='tooltip w-4 h-4 bg-green-500 rounded'>
+                  <span class='tooltiptext'>Status: 200<br>Response Time: 639 ms<br>Key Value: 86</span>
+              </div>
+          </div>
+          <p class='text-sm mt-2'>Response Time: 639 ms</p>
+          <p class='text-sm'>Key Value: 86</p>
+        </div>
+</div>
+<div id="status-history" class="p-4 bg-gray-800 rounded-lg shadow mt-4">
+    <h2 class="text-xl font-semibold">Status History</h2>
+    <ul class="mt-2 space-y-2">
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>N/A</strong>
+          <ul class='mt-1'>
+              <li>CH node landing page.json <==: unknown (Response Time: N/A ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>2025-03-07T19:15:33Z</strong>
+          <ul class='mt-1'>
+              <li>A"}: 200 (Response Time: 589 ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong></strong>
+          <ul class='mt-1'>
+              <li>:  (Response Time:  ms, Key Value: )</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>N/A</strong>
+          <ul class='mt-1'>
+              <li>CH node performance.json <==: unknown (Response Time: N/A ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>2025-03-07T19:15:33Z</strong>
+          <ul class='mt-1'>
+              <li>{"timestamp": "2025-03-07T19:15:33Z", "status": "200", "response time": "504", "key value": "89"}: 200 (Response Time: 504 ms, Key Value: 89)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong></strong>
+          <ul class='mt-1'>
+              <li>:  (Response Time:  ms, Key Value: )</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>N/A</strong>
+          <ul class='mt-1'>
+              <li>PT node landing page.json <==: unknown (Response Time: N/A ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>2025-03-07T19:15:33Z</strong>
+          <ul class='mt-1'>
+              <li>A"}: 200 (Response Time: 627 ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong></strong>
+          <ul class='mt-1'>
+              <li>:  (Response Time:  ms, Key Value: )</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>N/A</strong>
+          <ul class='mt-1'>
+              <li>PT node performance.json <==: unknown (Response Time: N/A ms, Key Value: N/A)</li>
+          </ul>
+        </li>
+<li class='p-2 bg-gray-700 rounded'>
+          <strong>2025-03-07T19:15:33Z</strong>
+          <ul class='mt-1'>
+              <li>{"timestamp": "2025-03-07T19:15:33Z", "status": "200", "response time": "639", "key value": "86"}: 200 (Response Time: 639 ms, Key Value: 86)</li>
+          </ul>
+        </li>
+</ul></div></div></body></html>
